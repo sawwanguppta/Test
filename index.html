@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic App Store</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { color: #333; }
+        .app-container { width: 100%; max-width: 800px; }
+        .app-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .app-image { width: 80px; height: 80px; border-radius: 15px; object-fit: cover; margin-right: 20px; }
+        .app-info { flex-grow: 1; }
+        .app-title { font-size: 1.2rem; font-weight: bold; margin: 0; }
+        .app-message { font-size: 0.9rem; color: #666; }
+        .download-btn { background-color: #007bff; color: white; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; }
+        .loader { font-size: 1.2rem; color: #666; margin-top: 50px; }
+        
+        @media (max-width: 500px) {
+            .app-card { flex-direction: column; text-align: center; }
+            .app-image { margin: 0 0 15px 0; }
+            .download-btn { width: 100%; margin-top: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Available Apps</h1>
+    <div id="loader" class="loader">Loading apps...</div>
+    <div class="app-container" id="app-list">
+        </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const SHEET_ID = '1E8qzhK-7eSqAdQrh-hysMtWJ4at1FvIHLNCEdwjibcs';
+        const SHEET_NAME = 'Sheet1'; // Apni sheet ka naam check karein
+        const URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${SHEET_NAME}`;
+
+        async function fetchApps() {
+            try {
+                const response = await fetch(URL);
+                const text = await response.text();
+                // Google Sheet JSON response ko clean karna
+                const jsonData = JSON.parse(text.substring(47, text.length - 2));
+                const rows = jsonData.table.rows;
+                const appList = document.getElementById('app-list');
+                const loader = document.getElementById('loader');
+
+                loader.style.display = 'none';
+
+                rows.forEach(row => {
+                    const title = row.c[0] ? row.c[0].v : '';
+                    const message = row.c[1] ? row.c[1].v : '';
+                    const image = row.c[2] ? row.c[2].v : 'https://via.placeholder.com/80';
+                    const link = row.c[3] ? row.c[3].v : '#';
+
+                    const card = `
+                        <div class="app-card">
+                            <img src="${image}" alt="${title}" class="app-image">
+                            <div class="app-info">
+                                <p class="app-title">${title}</p>
+                                <p class="app-message">${message}</p>
+                            </div>
+                            <a href="${link}" target="_blank" class="download-btn">Download</a>
+                        </div>
+                    `;
+                    appList.innerHTML += card;
+                });
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('loader').innerText = "Failed to load apps.";
+            }
+        }
+
+        fetchApps();
+    </script>
+</body>
+</html>
